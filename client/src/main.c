@@ -107,6 +107,7 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
 	char s[BUFFSIZE];
     int active = 1;
     int errorc = 0;
+    int fromSize;
     cpack sendp;
     spack recvp;
 
@@ -133,8 +134,9 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                 errormsg("Failed to send operation to the server, please check and retry");
                 errorc++;
             } else {
+            	fromSize = sizeof(from);
             	// Receive the result from the server
-                if (recvfrom(socket, &recvp, sizeof(recvp), 0, &from, sizeof(from)) < 0) {
+                if (recvfrom(socket, &recvp, sizeof(recvp), 0, &from, &fromSize) < 0) {
                     errormsg("Failed to receive operation from the server, please check and retry");
                     errorc++;
                 } else {
