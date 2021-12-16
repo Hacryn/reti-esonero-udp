@@ -101,9 +101,9 @@ int main(int argc, char *argv[]) {
 }
 
 int userinteraction(int socket, struct sockaddr_in serverAddr) {
-	char serverName[BUFFSIZE];
-	char serverIP[BUFFSIZE];
 	struct sockaddr_in from;
+	char *serverName;
+	char *serverIP;
 	char s[BUFFSIZE];
     int active = 1;
     int errorc = 0;
@@ -177,8 +177,10 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                         }
                     // Otherwise print the result
                     } else {
-                        printf("Ricevuto risultato dal server %s, ip %s: %d %c %d = %0.2f\n",
-                        		serverName, serverIP, sendp.operand1, sendp.operation, sendp.operand2, recvp.result);
+                        serverIP = &from.sin_addr;
+                        serverName = gethostbyaddr(serverIP, sizeof(from.sin_addr), PF_INET)->h_name;
+                    	printf("Ricevuto risultato dal server %s, ip %s: %d %c %d = %0.2f\n",
+                        		serverName, inet_ntoa(from.sin_addr), sendp.operand1, sendp.operation, sendp.operand2, recvp.result);
                     }
                 }
             }
