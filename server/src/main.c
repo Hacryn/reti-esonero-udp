@@ -14,7 +14,6 @@
 #include "calculator.h"
 #include "protocol.h"
 
-
 #if defined WIN32
 #include <winsock.h>
 #else
@@ -22,15 +21,30 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <netdb.h>
 #endif
 
 #define BUFFSIZE 256
 
 void ErrorHandler(const char *errorMessage);
 void ClearWinSock();
-int handleClient(int socket, struct sockaddr_in clientAddr);
+int handleClient(int socket, struct sockaddr_in clientAddr, struct hostent *remoteHost);
 
 int main(int argc, char *argv[]){
+    struct hostent *remoteHost;
+    char *host_name;
+    struct in_addr addr;
+
+    host_name = argv[1];
+    if(isalpha(host_name[0])){
+        // host by name
+        remoteHost = gethostbyname(host_name);
+    } else {
+        // host by address
+        addr.s_addr = inet_addr(host_name);
+        remoteHost = gethostbyaddr((char*)&addr, 4, AF_INET);
+    }
+
     int port;
     if(argc > 1){
         port = atoi(argv[1]);
@@ -42,7 +56,7 @@ int main(int argc, char *argv[]){
         port = PORT;
     }
 
-    // INITIALIZE WSA
+    // initialize WSA
     #if defined WIN32
     WSADATA wsaData;
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -54,33 +68,38 @@ int main(int argc, char *argv[]){
 
     int sock;
     struct sockaddr_in ServAddr;
+    struct sockaddr_in ClntAddr;
+    char buffer[buffsize];
 
-    // SOCKET CREATION
+    // socket creation
     if(sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
         ErrorHandler("socket() failed");
         ClearWinSock();
         return -1;
     }
 
-    // ADDRESS CONFIGURATION
-    memset(&echoServAddr, 0, sizeof(ServAddr));
-    echoServAddr.sin_family = AF_INET;
-    echoServAddr.sin_port = htons(PORT);
-    echoServAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // address configuration
+    memset(&ServAddr, 0, sizeof(ServAddr));
+    ServAddr.sin_family = AF_INET;
+    ServAddr.sin_port = htons(PORT);
+    ServAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    // BIND OF THE SOCKET
+    // bind of the socket
     if(bind(sock, (struct sockaddr *)&ServAddr, sizeof(ServAddr))) < 0){
         ErrorHandler("bind() failed");
         ClearWinSock();
         return -1;
     }
 
-    // RECEIVING ECHO STRING FROM CLIENT
-    while(1){
-        handleClient(sock, ClntAddr);
+    printf("Waiting for a client to connect...\n");
+
+    // receiving data from client
+    while(recvfrom(sock, buffer, BUFFSIZE, 0, (struct sockaddr*)&ClntAddr)){
+        handleClient(sock, ClntAddr, &remoteHost);
     }
 }
 
+// output error messages
 void ErrorHandler(char *errorMessage){
     printf(errorMessage);
 }
@@ -91,9 +110,7 @@ void ClearWinSock(){
     #endif
 }
 
-int handleClient(int socket, struct sockaddr_in clientAddr){
-    printf("Handling client: %s\n", inet_ntoa(clientAddr.sin_addr));
-
+int handleClient(int socket, struct sockaddr_in clientAddr, struct hostent *remoteHost){
     unsigned int cliAddrLen;
     char Buffer[BUFFSIZE];
     struct sockaddr_in from;
@@ -101,19 +118,19 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
     cpack rcv;
     spack snd;
 
-    // RECEIVING PACKAGE FROM THE CLIENT
+    // receiving package from the client
     if(recvfrom(socket, &rcv, sizeof(rcv), 0, &from, sizeof(from)) < 0){
         ErrorHandler("Failed to receive data from the client, please check and retry");
+        return -1;
     } else {
-        /* TO DO:
-         * implementare il messaggio:
-         * "Richiesta operazione '+ 23 45' dal client pippo.di.uniba.it, ip 193.204.187.154"
-         * RICORDA di usare la parte "dns" per la parte pippo.di.uniba.it
-         */
 
-        // CONVERSION DATA FROM NETWORK TO HOST LONG
+
+        // conversion data from network to host long
         rcv.operand1 = ntohl(rcv.operand1);
         rcv.operand2 = ntohl(rcv.operand2);
+
+        printf("Richiesta operazione '%c %d %d' dal client %s, ip %s\n", rcv.operation, rcv.operand1, rcv.operand2,
+               remoteHost, inet_ntoa(clientAddr.sin_addr));
 
         switch(rcv.operation){
             // Addition
@@ -169,10 +186,6 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
                 break;
                 // Division
             case '/':
-                /*
-                 * TO DO:
-                 * RICORDA che ora la divisione ritorna float
-                 */
                 if(rcv.operand2 == 0){
                     snd.result = 0;
                     snd.error = 2;
@@ -198,10 +211,10 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
     }
 
     // Conversion data from host to network long
-    snd.result = htonl(snd.result);
+    snd.result = (snd.result);
     snd.error = htonl(snd.error);
 
-    // SENDING ECHO STRING TO CLIENT
+    // sending results to client
     if(sendto(socket, &snd, sizeof(snd), 0, &clientAddr, sizeof(clientAddr)) < 0){
         ErrorHandler("sendto() sent different number of bytes than expected");
     }
