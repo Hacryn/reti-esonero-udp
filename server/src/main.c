@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
 	    #endif
 
     int port;
-    if(argc > 1){
+    if(argc == 2){
         port = atoi(argv[1]);
         if(port < 1 || port > 65535){
         	printf("Error: Bad port number %s \n", argv[1]);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
     // receiving data from client
     while(1){
         if (handleClient(sock, ClntAddr) < 0) {
-        	ErrorHandler("Unexpected client connection closed");
+        	ErrorHandler("Unexpected closed connection");
         }
     }
 
@@ -102,17 +102,18 @@ void ClearWinSock(){
 
 int handleClient(int socket, struct sockaddr_in clientAddr){
     struct sockaddr_in from;
+    int clientAddrSize;
     int result;
 
     cpack rcv;
     spack snd;
 
     // receiving package from the client
-    if(recvfrom(socket, &rcv, sizeof(rcv), 0, &from, sizeof(from)) < 0){
-        return 0;
+    clientAddrSize = sizeof(from);
+    if(recvfrom(socket, &rcv, sizeof(rcv), 0, &from, &clientAddrSize) == SOCKET_ERROR ){
+    	ErrorHandler("Failed to receive from client");
+        return 1;
     } else {
-
-
         // conversion data from network to host long
         rcv.operand1 = ntohl(rcv.operand1);
         rcv.operand2 = ntohl(rcv.operand2);
@@ -203,7 +204,7 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
 
     // sending results to client
     if(sendto(socket, &snd, sizeof(snd), 0, &clientAddr, sizeof(clientAddr)) < 0){
-        ErrorHandler("sendto() sent different number of bytes than expected");
+        ErrorHandler("Sending failed");
     }
 
     return 0;
