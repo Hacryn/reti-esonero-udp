@@ -47,11 +47,11 @@ int main(int argc, char *argv[]) {
 	// Arguments extraction
 
 	// Default arguments
-	if (argc == 0) {
+	if (argc < 2) {
 		addr = inet_addr("127.0.0.1");
 		port = PORT;
 	// User arguments
-	} else if (argc == 1) {
+	} else if (argc == 2) {
 		char address[BUFFSIZE];
 
 		if (subchar(argv[1]) < 0) {
@@ -59,14 +59,14 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		if (sscanf(argv[1], "%s %d", &address, &port) < 2) {
+		if (sscanf(argv[1], "%s %d", address, &port) < 2) {
 			errormsg("Argument format wrong, correct format is '<address>:<port>'");
 			return -1;
 		}
 
 		if (strlen(address) < 2) {
 			errormsg("Address is too short, default address selected");
-			strcpy(&address, "localhost");
+			strcpy(address, "localhost");
 		}
 
 		if(port < 1 || port > 65535) {
@@ -241,9 +241,9 @@ void errormsg(const char* msg) {
 
 int subchar(char *s) {
 	int i = 0;
-	while (*(s+i) != '/0') {
-		if(*(s+i) == ':') {
-			*(s+i) = ' ';
+	while (s[i] != '\0') {
+		if(s[i] == ':') {
+			s[i] = ' ';
 			return 0;
 		}
 	}
