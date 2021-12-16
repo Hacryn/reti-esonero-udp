@@ -26,7 +26,7 @@
 
 void ErrorHandler(const char *errorMessage);
 void ClearWinSock();
-int handleClient(int socket, struct sockaddr_in clientAddr);
+int handleClient(int socket);
 
 int main(int argc, char *argv[]){
 
@@ -53,7 +53,6 @@ int main(int argc, char *argv[]){
 
     int sock;
     struct sockaddr_in ServAddr;
-    struct sockaddr_in ClntAddr;
 
     // socket creation
     if((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]){
 
     // receiving data from client
     while(1){
-        if (handleClient(sock, ClntAddr) < 0) {
+        if (handleClient(sock) < 0) {
         	ErrorHandler("Unexpected closed connection");
         }
     }
@@ -100,8 +99,10 @@ void ClearWinSock(){
     #endif
 }
 
-int handleClient(int socket, struct sockaddr_in clientAddr){
+int handleClient(int socket){
     struct sockaddr_in from;
+    char *hostaddr;
+    char *hostname;
     int clientAddrSize;
     int result;
 
@@ -118,8 +119,15 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
         rcv.operand1 = ntohl(rcv.operand1);
         rcv.operand2 = ntohl(rcv.operand2);
 
+        hostaddr = &from.sin_addr;
+        hostname = gethostbyaddr(hostaddr, sizeof(from.sin_addr), PF_INET)->h_name;
+
+        if (hostname == NULL) {
+        	hostname = "(hostname not found)";
+        }
+
         printf("Richiesta operazione '%c %d %d' dal client %s, ip %s\n", rcv.operation, rcv.operand1, rcv.operand2,
-               "test", inet_ntoa(clientAddr.sin_addr));
+               hostname, inet_ntoa(from.sin_addr));
 
         switch(rcv.operation){
             // Addition
@@ -186,7 +194,7 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
                 break;
                 // Closing connection with client
             case '=':
-                printf("Connection closed with %s:%d \n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+                printf("Connection closed with %s:%d \n", inet_ntoa(from.sin_addr), ntohs(from.sin_port));
                 printf("Waiting for a client to connect... \n");
                 return 0;
                 break;
@@ -203,7 +211,7 @@ int handleClient(int socket, struct sockaddr_in clientAddr){
     snd.error = htonl(snd.error);
 
     // sending results to client
-    if(sendto(socket, &snd, sizeof(snd), 0, &clientAddr, sizeof(clientAddr)) < 0){
+    if(sendto(socket, &snd, sizeof(snd), 0, &from, sizeof(from)) < 0){
         ErrorHandler("Sending failed");
     }
 
