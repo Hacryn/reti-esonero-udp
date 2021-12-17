@@ -148,8 +148,8 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                 } else {
 
                     errorc = 0;
-                    recvp.error = ntohl(recvp.error);
-                    recvp.result = (recvp.result);
+                    recvp.error = (recvp.error);
+                    recvp.result = ntohl(recvp.result);
                     sendp.operand1 = ntohl(sendp.operand1);
                     sendp.operand2 = ntohl(sendp.operand2);
 
@@ -180,8 +180,13 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                     } else {
                         serverIP = &from.sin_addr;
                         serverName = gethostbyaddr(serverIP, sizeof(from.sin_addr), PF_INET)->h_name;
-                    	printf("Ricevuto risultato dal server %s, ip %s: %d %c %d = %0.2f\n",
-                        		serverName, inet_ntoa(from.sin_addr), sendp.operand1, sendp.operation, sendp.operand2, recvp.result);
+                    	if (sendp.operation == '/') {
+                    		printf("Ricevuto risultato dal server %s, ip %s: %d %c %d = %0.2f\n",
+                    				serverName, inet_ntoa(from.sin_addr), sendp.operand1, sendp.operation, sendp.operand2, recvp.result);
+                    	} else {
+                    		printf("Ricevuto risultato dal server %s, ip %s: %d %c %d = %d\n",
+                    				serverName, inet_ntoa(from.sin_addr), sendp.operand1, sendp.operation, sendp.operand2, (int) recvp.result);
+                    	}
                     }
                 }
             }
