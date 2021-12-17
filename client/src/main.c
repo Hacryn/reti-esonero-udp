@@ -134,6 +134,12 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                 errormsg("Failed to send operation to the server, please check and retry");
                 errorc++;
             } else {
+
+            	// Mark the closing of the connection
+            	if (sendp.operation == '=') {
+            		return 0;
+            	}
+
             	fromSize = sizeof(from);
             	// Receive the result from the server
                 if (recvfrom(socket, &recvp, sizeof(recvp), 0, &from, &fromSize) < 0) {
@@ -150,11 +156,6 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                     if (serverAddr.sin_addr.s_addr != from.sin_addr.s_addr ) {
                     	errormsg("Received package from unknown source");
                     	recvp.error = -1;
-                    }
-
-                    // Mark the closing of the connection
-                    if (sendp.operation == '=') {
-                    	return 0;
                     }
 
                     // If error, inform the user
@@ -189,7 +190,7 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
         }
     }
 
-    return 0;
+    return -1;
 }
 
 void extractop(cpack *pack, const char* s) {
