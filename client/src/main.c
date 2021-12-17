@@ -52,14 +52,18 @@ int main(int argc, char *argv[]) {
 		port = PORT;
 	// User arguments
 	} else if (argc == 2) {
+		struct hostent *remoteHost;
 		char address[BUFFSIZE];
+		char *buffer;
 
-		if (subchar(argv[1]) < 0) {
+		buffer = strdup(argv[1]);
+
+		if (subchar(buffer) < 0) {
 			errormsg("Formato argomento errato, il formato corretto e' '<address>:<port>'");
 			return -1;
 		}
 
-		if (sscanf(argv[1], "%s %d", address, &port) < 2) {
+		if (sscanf(buffer, "%s %d", address, &port) < 2) {
 			errormsg("Formato argomento errato, il formato corretto e' '<address>:<port>'");
 			return -1;
 		}
@@ -74,7 +78,18 @@ int main(int argc, char *argv[]) {
 			port = PORT;
 		}
 
-		addr = inet_addr((gethostbyname(address))->h_addr_list[1]);
+		remoteHost = gethostbyname(address);
+
+		if (remoteHost != NULL) {
+			int i = 0;
+			while (remoteHost->h_addr_list[i] != 0) {
+				addr = *(u_long *) remoteHost->h_addr_list[i++];
+			}
+		} else {
+			errormsg("Indirizzo server non trovato, selezionato indirizzo di default");
+			addr = inet_addr("127.0.0.1");
+		}
+
 	// Wrong number of user arguments
 	} else {
 		errormsg("Troppi argomenti, formato argomento (<address>:<port>)");
@@ -254,6 +269,7 @@ int subchar(char *s) {
 			s[i] = ' ';
 			return 0;
 		}
+		i++;
 	}
 	return -1;
 }
