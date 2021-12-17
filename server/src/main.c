@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
 	    WSADATA wsaData;
 	    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	    if(iResult != 0){
-	    	ErrorHandler("WSAStartup failed");
+	    	ErrorHandler("WSAStartup fallito");
 	        return EXIT_FAILURE;
 	    }
 	    #endif
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]){
     if(argc == 2){
         port = atoi(argv[1]);
         if(port < 1 || port > 65535){
-        	printf("Error: Bad port number %s \n", argv[1]);
+        	printf("Errore: Numero di porta non valido %s \n", argv[1]);
             return -1;
         }
      } else {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
 
     // socket creation
     if((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
-        ErrorHandler("Socket creation failed");
+        ErrorHandler("Creazione del socket fallita");
         ClearWinSock();
         return -1;
     }
@@ -69,18 +69,18 @@ int main(int argc, char *argv[]){
 
     // bind of the socket
     if((bind(sock, (struct sockaddr *)&ServAddr, sizeof(ServAddr))) < 0){
-        ErrorHandler("Server binding failed");
+        ErrorHandler("Binding del server fallito");
         ClearWinSock();
         return -1;
     }
 
-    printf("Waiting for a client to connect...\n");
+    printf("Aspettando richieste dai client...\n");
     fflush(stdout);
 
     // receiving data from client
     while(1){
         if (handleClient(sock) < 0) {
-        	ErrorHandler("Unexpected closed connection");
+        	ErrorHandler("Interazione con il client interrotta");
         }
     }
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 
 // output error messages
 void ErrorHandler(const char *errorMessage){
-    printf("Error: %s\n", errorMessage);
+    printf("Errore: %s\n", errorMessage);
     fflush(stdout);
 }
 
@@ -112,7 +112,7 @@ int handleClient(int socket){
     // receiving package from the client
     clientAddrSize = sizeof(from);
     if(recvfrom(socket, &rcv, sizeof(rcv), 0, &from, &clientAddrSize) == SOCKET_ERROR ){
-    	ErrorHandler("Failed to receive from client");
+    	ErrorHandler("Ricevimento fallito dal client");
         return 1;
     } else {
         // conversion data from network to host long
@@ -124,7 +124,7 @@ int handleClient(int socket){
         hostname = gethostbyaddr(hostaddr, sizeof(from.sin_addr), PF_INET)->h_name;
 
         if (hostname == NULL) {
-        	hostname = "(hostname not found)";
+        	hostname = "(nome client non trovato)";
         }
 
         if(rcv.operation != '='){
@@ -196,8 +196,7 @@ int handleClient(int socket){
                 break;
                 // Closing connection with client
             case '=':
-                printf("Connection closed with %s:%d \n", inet_ntoa(from.sin_addr), ntohs(from.sin_port));
-                printf("Waiting for a client to connect... \n");
+                printf("Client %s, ip %s e' andato offline\n", hostname, inet_ntoa(from.sin_addr));
                 return 0;
                 break;
                 // Unrecognized symbol
@@ -214,7 +213,7 @@ int handleClient(int socket){
 
     // sending results to client
     if(sendto(socket, &snd, sizeof(snd), 0, &from, sizeof(from)) < 0){
-        ErrorHandler("Sending failed");
+        ErrorHandler("Risposta al client fallita");
     }
 
     return 0;

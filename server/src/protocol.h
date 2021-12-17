@@ -3,10 +3,10 @@
 #define PORT (60000)
 
 // list of the errors
-#define ERROR1 "Operation invalid"
-#define ERROR2 "Division for 0 (/0)"
-#define ERROR3 "Integer overflow"
-#define ERROR4 "Integer underflow"
+#define ERROR1 "Operazione non valida"
+#define ERROR2 "Divisione per 0 (/0)"
+#define ERROR3 "Overflow intero"
+#define ERROR4 "Underflow intero"
 
 /*
  * The client send this package to the server

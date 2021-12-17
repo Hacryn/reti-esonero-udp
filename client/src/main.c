@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	int port;
 
 	if (initializeWSA() == -1) {
-	    errormsg("WSA initialization failed");
+	    errormsg("WSAStartup fallito");
 	    return -1;
 	}
 
@@ -55,35 +55,35 @@ int main(int argc, char *argv[]) {
 		char address[BUFFSIZE];
 
 		if (subchar(argv[1]) < 0) {
-			errormsg("Argument format wrong, correct format is '<address>:<port>'");
+			errormsg("Formato argomento errato, il formato corretto e' '<address>:<port>'");
 			return -1;
 		}
 
 		if (sscanf(argv[1], "%s %d", address, &port) < 2) {
-			errormsg("Argument format wrong, correct format is '<address>:<port>'");
+			errormsg("Formato argomento errato, il formato corretto e' '<address>:<port>'");
 			return -1;
 		}
 
 		if (strlen(address) < 2) {
-			errormsg("Address is too short, default address selected");
+			errormsg("Indirizzo troppo corto, selezionato indirizzo di default");
 			strcpy(address, "localhost");
 		}
 
 		if(port < 1 || port > 65535) {
-			errormsg("Port invalid, default port selected");
+			errormsg("Porta invalida, selezionata porta di default");
 			port = PORT;
 		}
 
 		addr = inet_addr((gethostbyname(address))->h_addr_list[1]);
 	// Wrong number of user arguments
 	} else {
-		errormsg("Too many arguments, retry with 1 argument (<address>:<port>)");
+		errormsg("Troppi argomenti, formato argomento (<address>:<port>)");
 		return -1;
 	}
 
 	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock < 0) {
-		errormsg("Socket creation failed");
+		errormsg("Creazione del socket fallita");
 		return -1;
 	}
 
@@ -114,12 +114,12 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
     while (active) {
         // If the client failed to send/receive for 3 or more times the app close itself
         if(errorc >= 3) {
-            errormsg("Communication failed with the server, closing the app");
+            errormsg("Comunicazione con il server fallita con 3 tentativi consecutivi, chiusura app");
             return -1;
         }
 
         // Read operation from the user
-        printf("Insert operation: ");
+        printf("Inserisci operazione: ");
         scanf("%64[^\n]", s);
         fflush(stdin);
         fflush(stdout);
@@ -131,7 +131,7 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
             sendp.operand2 = htonl(sendp.operand2);
 
             if (sendto(socket, &sendp, sizeof(sendp), 0, &serverAddr, sizeof(serverAddr)) < 0) {
-                errormsg("Failed to send operation to the server, please check and retry");
+                errormsg("Fallimento nell'inoltro della richiesta al server, controlla e riprova");
                 errorc++;
             } else {
 
@@ -143,7 +143,7 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
             	fromSize = sizeof(from);
             	// Receive the result from the server
                 if (recvfrom(socket, &recvp, sizeof(recvp), 0, &from, &fromSize) < 0) {
-                    errormsg("Failed to receive operation from the server, please check and retry");
+                    errormsg("Fallimento nella recezione della risposta dal server, controlla e riprova");
                     errorc++;
                 } else {
 
@@ -154,7 +154,7 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                     sendp.operand2 = ntohl(sendp.operand2);
 
                     if (serverAddr.sin_addr.s_addr != from.sin_addr.s_addr ) {
-                    	errormsg("Received package from unknown source");
+                    	errormsg("Ricevuto pacchetto da fonte sconosciuta");
                     	recvp.error = -1;
                     }
 
@@ -173,8 +173,9 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                             case 4:
                             	errormsg(ERROR4);
                             	break;
+                            case -1: break;
                             default:
-                                errormsg("Unknown error");
+                                errormsg("errore sconosciuto");
                         }
                     // Otherwise print the result
                     } else {
@@ -191,7 +192,7 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                 }
             }
         } else {
-            errormsg("Operation format invalid or numbers exceeding range (range: [-2147483648, +2147483647])");
+            errormsg("Formato operazione non valido o numeri troppo grandi/piccoli (range: [-2147483648, +2147483647])");
         }
     }
 
@@ -209,8 +210,6 @@ void extractop(cpack *pack, const char* s) {
 
 	if (strlen(s) >= 5 && strlen(s) < 26) {
         if (sscanf(s, "%c %lld %lld", &op, &op1, &op2) < 3) {
-        	pack->operation = 'i';
-        } else if (op != '+' && op != '-' && op != '=' && op != 'x' && op != '/') {
         	pack->operation = 'i';
         } else {
         	if (op1 >= INT_MIN && op1 <= INT_MAX && op2 >= INT_MIN && op2 <= INT_MAX) {
@@ -231,7 +230,6 @@ int initializeWSA() {
 	WSADATA wsaData;
 	int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
 	if (iResult != 0) {
-		errormsg("StartUp failed");
 		return -1;
 	}
 #endif
@@ -246,7 +244,7 @@ void clearwinsock(){
 
 
 void errormsg(const char* msg) {
-    printf("Error: %s\n", msg);
+    printf("Errore: %s\n", msg);
 }
 
 int subchar(char *s) {
