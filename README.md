@@ -10,8 +10,10 @@ Given a wrong port number to the server alerts the user and close the applicatio
 The client has two parameters: the address and the port number of the server. <br>
 If the parameters are missing the client uses the default parameters. <br>
 If the address is not a valid address the client uses the default ip address, if the port number is not a valid port number the client uses the default port number. <br>
-`Client.exe localhost:55000` (connect with the server on the 55000 port at 127.0.0.1) or <br>
-`Client.exe srv.di.uniba.it:56700` (connect with the server on the port 56700 at srv.di.uniba.it)
+`Client.exe 127.0.0.1:55000` (connect with the server on the 55000 port at 127.0.0.1) or <br>
+`Client.exe localhost:55000` (connect with the server on the 55000 port at localhost) or <br>
+`Client.exe srv.di.uniba.it:55000` (connect with the server on the port 55000 at srv.di.uniba.it)
+
 
 The calculator accepts only integer number and return a result (or an error), <br> the command for the operations is: `[operation char] [integer] [integer]`. <br>
 The possible operation are: ‘+’ (addition), ‘–‘ (subtraction), ‘x’ (multiplication) and ‘/’ (division). <br>
