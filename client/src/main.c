@@ -148,8 +148,8 @@ int userinteraction(int socket, struct sockaddr_in serverAddr) {
                 } else {
 
                     errorc = 0;
-                    recvp.error = (recvp.error);
-                    recvp.result = ntohl(recvp.result);
+                    recvp.error = ntohl(recvp.error);
+                    recvp.result = (recvp.result);
                     sendp.operand1 = ntohl(sendp.operand1);
                     sendp.operand2 = ntohl(sendp.operand2);
 
