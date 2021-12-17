@@ -12,7 +12,7 @@ int mult(int a, int b){
     return a * b;
 }
 
-float division(int a, int b){
+float division(float a, float b){
     if(b == 0){
         return b;
     } else {

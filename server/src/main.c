@@ -187,8 +187,7 @@ int handleClient(int socket){
                     snd.result = 0;
                     snd.error = 2;
                 } else {
-                    result = division(rcv.operand1, rcv.operand2);
-                    snd.result = result;
+                    snd.result = division((float) rcv.operand1, (float) rcv.operand2);
                     snd.error = 0;
                 }
                 break;
