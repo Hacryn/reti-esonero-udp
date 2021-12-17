@@ -119,6 +119,7 @@ int handleClient(int socket){
         rcv.operand1 = ntohl(rcv.operand1);
         rcv.operand2 = ntohl(rcv.operand2);
 
+        // taking the name of host
         hostaddr = &from.sin_addr;
         hostname = gethostbyaddr(hostaddr, sizeof(from.sin_addr), PF_INET)->h_name;
 
@@ -126,8 +127,10 @@ int handleClient(int socket){
         	hostname = "(hostname not found)";
         }
 
-        printf("Richiesta operazione '%c %d %d' dal client %s, ip %s\n", rcv.operation, rcv.operand1, rcv.operand2,
+        if(rcv.operation != '='){
+            printf("Richiesta operazione '%c %d %d' dal client %s, ip %s\n", rcv.operation, rcv.operand1, rcv.operand2,
                hostname, inet_ntoa(from.sin_addr));
+        }
 
         switch(rcv.operation){
             // Addition
