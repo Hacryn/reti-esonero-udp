@@ -7,9 +7,9 @@ The server has one parameter: the port number, if it is not given the server ass
 Given a wrong port number to the server alerts the user and close the application with an error code. <br>
 `Server.exe 55000` (assign 55000 as the port number for the server)
 
-The client has two parameters: the ip address and the port number of the server. <br>
+The client has two parameters: the address and the port number of the server. <br>
 If the parameters are missing the client uses the default parameters. <br>
-If the ip address is not a valid ip address the client uses the default ip address, if the port number is not a valid port number the client uses the default port number. <br>
+If the address is not a valid address the client uses the default ip address, if the port number is not a valid port number the client uses the default port number. <br>
 `Client.exe localhost:55000` (connect with the server on the 55000 port at 127.0.0.1) or <br>
 `Client.exe srv.di.uniba.it:56700` (connect with the server on the port 56700 at srv.di.uniba.it)
 
